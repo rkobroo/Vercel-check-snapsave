@@ -3,7 +3,7 @@
   "version": "2.2.1",
   "description": "Download Instagram, Facebook, TikTok and Twitter (X) media using snapsave.app downloader",
   "type": "module",
-  "scripts": {and 
+  "scripts": {
     "build": "unbuild",
     "prepack": "pnpm build",
     "lint": "eslint .",
@@ -66,8 +66,7 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0",
-    "express": "^5.1.0",
-    "snapsave-media-downloader": "^2.2.1"
+    "express": "^5.1.0"
   },
   "packageManager": "pnpm@10.11.0"
 }
