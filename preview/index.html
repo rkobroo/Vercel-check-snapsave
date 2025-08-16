@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapSave API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .form-section {
+            padding: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .test-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            padding: 0 30px 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .json-output {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .sample-urls {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .sample-urls h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .sample-url {
+            display: block;
+            color: #667eea;
+            text-decoration: none;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+        }
+
+        .sample-url:hover {
+            background: #e9ecef;
+            padding-left: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .sample-url:last-child {
+            border-bottom: none;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 8px 0;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎥 SnapSave API Tester</h1>
+            <p>Test your media downloader API with URLs from Instagram, Facebook, TikTok & Twitter</p>
+        </div>
+
+        <div class="form-section">
+            <form id="testForm">
+                <div class="input-group">
+                    <label for="mediaUrl">Media URL:</label>
+                    <input 
+                        type="url" 
+                        id="mediaUrl" 
+                        placeholder="https://www.instagram.com/p/..." 
+                        required
+                    >
+                </div>
+                <button type="submit" class="test-button" id="testBtn">
+                    Test API
+                </button>
+            </form>
+
+            <div class="sample-urls">
+                <h3>Sample URLs to test:</h3>
+                <a href="#" class="sample-url" data-url="https://www.instagram.com/reel/CtjoC2BNsB2">Instagram Reel</a>
+                <a href="#" class="sample-url" data-url="https://www.tiktok.com/@user/video/1234567890">TikTok Video</a>
+                <a href="#" class="sample-url" data-url="https://www.facebook.com/watch?v=123456789">Facebook Video</a>
+                <a href="#" class="sample-url" data-url="https://x.com/user/status/1234567890">Twitter Video</a>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                Processing your request...
+            </div>
+
+            <div id="results" style="display: none;">
+                <div id="status"></div>
+                <div id="jsonOutput" class="json-output"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Since we can't directly import TypeScript files, we'll make API calls to our server
+        async function snapsave(url) {
+            const response = await fetch('/api/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url })
+            });
+            return await response.json();
+        }
+
+        const form = document.getElementById('testForm');
+        const urlInput = document.getElementById('mediaUrl');
+        const testBtn = document.getElementById('testBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const status = document.getElementById('status');
+        const jsonOutput = document.getElementById('jsonOutput');
+
+        // Sample URL functionality
+        document.querySelectorAll('.sample-url').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('mediaUrl').value = link.dataset.url;
+            });
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const url = urlInput.value.trim();
+            if (!url) return;
+
+            // Show loading state
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            testBtn.disabled = true;
+            testBtn.textContent = 'Testing...';
+
+            try {
+                const response = await snapsave(url);
+
+                // Hide loading
+                loading.style.display = 'none';
+                results.style.display = 'block';
+
+                // Show status
+                if (response.success) {
+                    status.innerHTML = '<div class="success">✅ API call successful!</div>';
+
+                    // Display results with proper styling
+                    let html = '<div class="response-container">';
+
+                    // Show title/description prominently
+                    if (response.data.description) {
+                        html += `<div class="info-section" style="margin-bottom: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; border-left: 4px solid #667eea;">
+                            <h4 style="margin-bottom: 10px; color: #2c3e50;">📝 Title/Description:</h4>
+                            <p class="description-text" style="font-size: 16px; line-height: 1.5; color: #2c3e50; font-weight: 500;">${response.data.description}</p>
+                        </div>`;
+                    }
+
+                    // Show preview image prominently
+                    if (response.data.preview) {
+                        html += `<div class="preview-section" style="margin-bottom: 20px; text-align: center;">
+                            <h4 style="margin-bottom: 15px; color: #2c3e50;">🖼️ Preview:</h4>
+                            <img src="${response.data.preview}" alt="Preview" class="preview-image" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        </div>`;
+                    }
+
+                    if (response.data.media && response.data.media.length > 0) {
+                        html += '<div class="media-section"><h4 style="color: #2c3e50; margin-bottom: 15px;">🎬 Media Files:</h4>';
+                        response.data.media.forEach((media, index) => {
+                            html += `<div class="media-item" style="border: 1px solid #e9ecef; padding: 20px; margin: 15px 0; border-radius: 12px; background: #f8f9fa; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p style="font-size: 18px; font-weight: 600; color: #2c3e50; margin-bottom: 15px;">📱 Media ${index + 1}:</p>
+                                <p style="margin-bottom: 8px;"><strong>Type:</strong> <span style="background: #667eea; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase;">${media.type || 'Unknown'}</span></p>`;
+
+                            if (media.resolution) {
+                                html += `<p style="margin-bottom: 8px;"><strong>Resolution:</strong> <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${media.resolution}</span></p>`;
+                            }
+
+                            if (media.thumbnail) {
+                                html += `<div style="margin: 15px 0;">
+                                    <strong style="display: block; margin-bottom: 8px;">🖼️ Thumbnail:</strong>
+                                    <img src="${media.thumbnail}" alt="Thumbnail" style="max-width: 250px; max-height: 150px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                </div>`;
+                            }
+
+                            if (media.url) {
+                                html += `<div class="url-section" style="margin: 15px 0; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid #e9ecef;">
+                                    <strong style="display: block; margin-bottom: 8px;">🔗 Download URL:</strong>
+                                    <a href="${media.url}" target="_blank" style="word-break: break-all; font-size: 11px; color: #667eea; text-decoration: none;">${media.url}</a>
+                                </div>`;
+
+                                const safeTitle = response.data.description ? response.data.description.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_').substring(0, 50) : `media_${index + 1}`;
+                                html += `<button class="download-btn" onclick="window.downloadMediaFunction('${media.url.replace(/'/g, "\\'")}', '${media.type}', '${safeTitle}', ${index + 1})" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); margin-top: 10px; font-size: 16px; padding: 12px 20px;">📥 Download ${media.type} ${media.resolution ? `(${media.resolution})` : ''}</button>`;
+                            }
+
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    html += '</div>';
+                    jsonOutput.innerHTML = html;
+                } else {
+                    status.innerHTML = `<div class="error">❌ API call failed: ${response.message || 'Unknown error'}</div>`;
+                    jsonOutput.textContent = JSON.stringify(response, null, 2);
+                }
+
+            } catch (error) {
+                loading.style.display = 'none';
+                results.style.display = 'block';
+                status.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                jsonOutput.textContent = JSON.stringify({ error: error.message }, null, 2);
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = 'Test API';
+            }
+        });
+
+        // Download media function
+        window.downloadMediaFunction = async function(url, type, title, index) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+
+                const downloadUrl = window.URL.createObjectURL(blob);
+
+                // Determine platform name (simplified for filename generation)
+                let platformName = 'unknown';
+                if (window.location.href.includes('instagram.com')) platformName = 'instagram';
+                else if (window.location.href.includes('tiktok.com')) platformName = 'tiktok';
+                else if (window.location.href.includes('facebook.com')) platformName = 'facebook';
+                else if (window.location.href.includes('x.com') || window.location.href.includes('twitter.com')) platformName = 'twitter';
+
+                // Clean and prepare filename
+                let filename = 'media';
+                if (title && title.trim().length > 0) {
+                    filename = title
+                        .replace(/[^a-zA-Z0-9\s\-_]/g, '') // Remove special chars except spaces, hyphens, underscores
+                        .replace(/\s+/g, '_') // Replace spaces with underscores
+                        .replace(/_+/g, '_') // Replace multiple underscores with single
+                        .substring(0, 80) // Limit length
+                        .replace(/^_+|_+$/g, ''); // Remove leading/trailing underscores
+
+                    // Ensure filename is not empty after cleaning
+                    if (!filename || filename.length < 2) {
+                        filename = `${platformName}_video_${Date.now()}`;
+                    }
+                } else {
+                    filename = `${platformName}_video_${Date.now()}`;
+                }
+
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `${filename}.${type === 'video' ? 'mp4' : 'jpg'}`; // Simplified extension
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                console.log('Downloaded video successfully with title:', filename);
+            } catch (error) {
+                console.error('Download failed:', error);
+                alert('Download failed. The media URL might not support direct download or the server returned an error.');
+            }
+        }
+    </script>
+</body>
+</html>
