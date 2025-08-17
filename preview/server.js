@@ -1,4 +1,3 @@
-
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -38,7 +37,7 @@ app.post('/api/test', async (req, res) => {
         if (!url) {
             return res.status(400).json({ success: false, message: 'URL is required' });
         }
-        
+
         const result = await snapsave(url);
         res.json(result);
     } catch (error) {
