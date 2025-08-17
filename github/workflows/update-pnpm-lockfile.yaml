@@ -1,0 +1,40 @@
+name: Update pnpm-lock.yaml
+
+# Trigger on pushes to main branch and manual trigger
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update-lockfile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies (this updates pnpm-lock.yaml if needed)
+        run: pnpm install
+
+      - name: Commit updated pnpm-lock.yaml
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          # Commit and push ONLY if pnpm-lock.yaml changed
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: update pnpm-lock.yaml via GitHub Actions"
+            git push
+          else
+            echo "No changes in pnpm-lock.yaml"
+          fi
