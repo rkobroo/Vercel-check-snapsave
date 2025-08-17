@@ -1,0 +1,45 @@
+modules = ["nodejs-20"]
+run = "node index.js"
+
+[nix]
+channel = "stable-25_05"
+
+[deployment]
+run = ["sh", "-c", "pnpm install && pnpm build && cd preview && pnpm install && node server.js"]
+
+[workflows]
+runButton = "Run Preview Website"
+
+[[workflows.workflow]]
+name = "Run Playground"
+author = 46492462
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd playground && node index.js"
+
+[[workflows.workflow]]
+name = "Run Preview Website"
+author = 46492462
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm install"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm build"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd preview && rm -f package-lock.json && pnpm install"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd preview && node server.js"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
