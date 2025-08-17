@@ -1,0 +1,15 @@
+
+{
+  "name": "snapsave-preview",
+  "version": "1.0.0",
+  "description": "Preview website for SnapSave media downloader",
+  "main": "server.js",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "install": "npm install"
+  }
+}
