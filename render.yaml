@@ -4,7 +4,7 @@ services:
     name: snapsave-api
     env: node
     plan: free
-    buildCommand: pnpm install && pnpm build && cd preview && pnpm install
+    buildCommand: rm -f pnpm-lock.yaml && pnpm install && pnpm build && cd preview && rm -f package-lock.json && pnpm install
     startCommand: cd preview && node server.js
     envVars:
       - key: NODE_ENV
