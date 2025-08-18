@@ -1,14 +1,12 @@
 
 {
   "version": 2,
-  "buildCommand": "pnpm install && pnpm build",
-  "outputDirectory": "dist",
-  "installCommand": "pnpm install",
-  "functions": {
-    "preview/server.js": {
-      "runtime": "nodejs18.x"
+  "builds": [
+    {
+      "src": "preview/server.js",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
