@@ -207,6 +207,145 @@
         .download-btn:active {
             transform: translateY(0);
         }
+
+        .results-container {
+            margin-top: 20px;
+        }
+
+        .video-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+
+        .video-thumbnail {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .thumbnail-image {
+            max-width: 400px;
+            max-height: 300px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #e9ecef;
+        }
+
+        .media-section h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .media-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .media-info {
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .media-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .media-type {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 14px;
+        }
+
+        .media-quality {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .media-thumbnail {
+            margin: 8px 0;
+        }
+
+        .media-thumb-img {
+            max-width: 120px;
+            max-height: 80px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .media-details {
+            margin-top: 8px;
+        }
+
+        .media-title {
+            font-size: 14px;
+            color: #333;
+            margin: 0 0 4px 0;
+            font-weight: 500;
+        }
+
+        .media-duration {
+            font-size: 12px;
+            color: #6c757d;
+            margin: 0;
+            font-style: italic;
+        }
+
+        .download-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+
+        .download-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #0056b3, #004494);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .resolution {
+            color: #666;
+            font-size: 12px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -274,6 +413,7 @@
         const results = document.getElementById('results');
         const status = document.getElementById('status');
         const jsonOutput = document.getElementById('jsonOutput');
+        const resultsDiv = document.getElementById('jsonOutput'); // Assuming results should be displayed in jsonOutput div
 
         // Sample URL functionality
         document.querySelectorAll('.sample-url').forEach(link => {
@@ -305,61 +445,7 @@
                 // Show status
                 if (response.success) {
                     status.innerHTML = '<div class="success">✅ API call successful!</div>';
-
-                    // Display results with proper styling
-                    let html = '<div class="response-container">';
-
-                    // Show title/description prominently
-                    if (response.data.description) {
-                        html += `<div class="info-section" style="margin-bottom: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; border-left: 4px solid #667eea;">
-                            <h4 style="margin-bottom: 10px; color: #2c3e50;">📝 Title/Description:</h4>
-                            <p class="description-text" style="font-size: 16px; line-height: 1.5; color: #2c3e50; font-weight: 500;">${response.data.description}</p>
-                        </div>`;
-                    }
-
-                    // Show preview image prominently
-                    if (response.data.preview) {
-                        html += `<div class="preview-section" style="margin-bottom: 20px; text-align: center;">
-                            <h4 style="margin-bottom: 15px; color: #2c3e50;">🖼️ Preview:</h4>
-                            <img src="${response.data.preview}" alt="Preview" class="preview-image" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                        </div>`;
-                    }
-
-                    if (response.data.media && response.data.media.length > 0) {
-                        html += '<div class="media-section"><h4 style="color: #2c3e50; margin-bottom: 15px;">🎬 Media Files:</h4>';
-                        response.data.media.forEach((media, index) => {
-                            html += `<div class="media-item" style="border: 1px solid #e9ecef; padding: 20px; margin: 15px 0; border-radius: 12px; background: #f8f9fa; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                                <p style="font-size: 18px; font-weight: 600; color: #2c3e50; margin-bottom: 15px;">📱 Media ${index + 1}:</p>
-                                <p style="margin-bottom: 8px;"><strong>Type:</strong> <span style="background: #667eea; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase;">${media.type || 'Unknown'}</span></p>`;
-
-                            if (media.resolution) {
-                                html += `<p style="margin-bottom: 8px;"><strong>Resolution:</strong> <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${media.resolution}</span></p>`;
-                            }
-
-                            if (media.thumbnail) {
-                                html += `<div style="margin: 15px 0;">
-                                    <strong style="display: block; margin-bottom: 8px;">🖼️ Thumbnail:</strong>
-                                    <img src="${media.thumbnail}" alt="Thumbnail" style="max-width: 250px; max-height: 150px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                </div>`;
-                            }
-
-                            if (media.url) {
-                                html += `<div class="url-section" style="margin: 15px 0; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid #e9ecef;">
-                                    <strong style="display: block; margin-bottom: 8px;">🔗 Download URL:</strong>
-                                    <a href="${media.url}" target="_blank" style="word-break: break-all; font-size: 11px; color: #667eea; text-decoration: none;">${media.url}</a>
-                                </div>`;
-
-                                const safeTitle = response.data.description ? response.data.description.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_').substring(0, 50) : `media_${index + 1}`;
-                                html += `<button class="download-btn" onclick="window.downloadMediaFunction('${media.url.replace(/'/g, "\\'")}', '${media.type}', '${safeTitle}', ${index + 1})" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); margin-top: 10px; font-size: 16px; padding: 12px 20px;">📥 Download ${media.type} ${media.resolution ? `(${media.resolution})` : ''}</button>`;
-                            }
-
-                            html += '</div>';
-                        });
-                        html += '</div>';
-                    }
-
-                    html += '</div>';
-                    jsonOutput.innerHTML = html;
+                    displayResults(response); // Call the displayResults function
                 } else {
                     status.innerHTML = `<div class="error">❌ API call failed: ${response.message || 'Unknown error'}</div>`;
                     jsonOutput.textContent = JSON.stringify(response, null, 2);
@@ -376,8 +462,79 @@
             }
         });
 
+        // Display results
+        function displayResults(data) {
+            resultsDiv.innerHTML = '';
+
+            if (data.success && data.data && data.data.media) {
+                const { description, preview, media } = data.data;
+
+                let html = '<div class="results-container">';
+
+                // Video Title/Description Section
+                if (description) {
+                    html += `
+                        <div class="video-info">
+                            <h3>🎬 Video Title</h3>
+                            <p class="video-title">${description}</p>
+                        </div>
+                    `;
+                }
+
+                // Thumbnail/Preview Section
+                if (preview) {
+                    html += `
+                        <div class="video-thumbnail">
+                            <h3>🖼️ Thumbnail</h3>
+                            <img src="${preview}" alt="Video Thumbnail" class="thumbnail-image">
+                        </div>
+                    `;
+                }
+
+                // Media Files Section
+                html += '<div class="media-section"><h3>📁 Available Downloads</h3>';
+
+                media.forEach((item, index) => {
+                    const mediaType = item.type || 'unknown';
+                    const mediaIcon = mediaType === 'video' ? '🎥' : '📷';
+                    const resolution = item.resolution || 'Standard Quality';
+
+                    html += `
+                        <div class="media-item">
+                            <div class="media-info">
+                                <div class="media-header">
+                                    <span class="media-type">${mediaIcon} ${mediaType.toUpperCase()}</span>
+                                    <span class="media-quality">${resolution}</span>
+                                </div>
+
+                                ${item.thumbnail && item.thumbnail !== preview ? `
+                                    <div class="media-thumbnail">
+                                        <img src="${item.thumbnail}" alt="Media Thumbnail" class="media-thumb-img">
+                                    </div>
+                                ` : ''}
+
+                                <div class="media-details">
+                                    <p class="media-title">${description || 'Untitled Media'}</p>
+                                    ${mediaType === 'video' ? '<p class="media-duration">🕒 Duration: Auto-detected on download</p>' : ''}
+                                </div>
+                            </div>
+
+                            <button onclick="downloadMediaFunction('${item.url}', '${mediaType}', '${(description || 'media').replace(/'/g, "\\'")}', ${index}, '${resolution}')" class="download-btn">
+                                ⬇️ Download ${resolution}
+                            </button>
+                        </div>
+                    `;
+                });
+
+                html += '</div></div>';
+                resultsDiv.innerHTML = html;
+            } else {
+                resultsDiv.innerHTML = '<div class="error">❌ No media found or invalid response</div>';
+            }
+        }
+
         // Download media function
-        window.downloadMediaFunction = async function(url, type, title, index) {
+        window.downloadMediaFunction = async function(url, type, title, index, resolution) {
             try {
                 const response = await fetch(url);
                 const blob = await response.blob();
@@ -395,7 +552,7 @@
                 let filename = 'media';
                 if (title && title.trim().length > 0) {
                     filename = title
-                        .replace(/[^a-zA-Z0-9\s\-_]/g, '') // Remove special chars except spaces, hyphens, underscores
+                        .replace(/[^a-zA-Z0-9\s-_]/g, '') // Remove special chars except spaces, hyphens, underscores
                         .replace(/\s+/g, '_') // Replace spaces with underscores
                         .replace(/_+/g, '_') // Replace multiple underscores with single
                         .substring(0, 80) // Limit length
