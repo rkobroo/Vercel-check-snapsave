@@ -1,21 +1,5 @@
 import express from 'express';
-import { createRequire } from 'module';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Try to import the built module
-let snapsave;
-try {
-  const { snapsave: snapSaveFunction } = await import('../dist/index.mjs');
-  snapsave = snapSaveFunction;
-} catch (error) {
-  console.error('Failed to import snapsave module:', error.message);
-  console.log('Please ensure the project is built by running: pnpm build');
-  process.exit(1);
-}
+import { snapsave } from '../dist/index.mjs';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -74,7 +58,26 @@ app.post('/api/test', async (req, res) => {
     }
 });
 
-// GET endpoint for direct downloads
+// Info endpoint - returns media information without download
+app.get('/info', async (req, res) => {
+    try {
+        const { url } = req.query;
+        if (!url) {
+            return res.status(400).json({ success: false, message: 'URL parameter is required' });
+        }
+
+        const result = await snapsave(url);
+        res.json(result);
+    } catch (error) {
+        console.error('Info API Error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Internal server error'
+        });
+    }
+});
+
+// Download endpoint - returns direct download link or redirects to media
 app.get('/download', async (req, res) => {
     try {
         const { url } = req.query;
@@ -84,14 +87,22 @@ app.get('/download', async (req, res) => {
 
         const result = await snapsave(url);
         
-        if (result.success && result.data?.media?.[0]?.url) {
-            // Redirect to the actual download URL
-            res.redirect(result.data.media[0].url);
-        } else {
-            res.status(400).json(result);
+        if (!result.success || !result.data?.media?.length) {
+            return res.status(404).json({ success: false, message: 'No media found' });
         }
+
+        // Get the first/best quality media
+        const media = result.data.media[0];
+        
+        if (!media.url) {
+            return res.status(404).json({ success: false, message: 'No download URL available' });
+        }
+
+        // For direct download, redirect to the media URL
+        res.redirect(302, media.url);
+        
     } catch (error) {
-        console.error('Download Error:', error);
+        console.error('Download API Error:', error);
         res.status(500).json({
             success: false,
             message: error.message || 'Internal server error'
