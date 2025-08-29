@@ -13,8 +13,24 @@
       "dest": "/preview/server.js"
     },
     {
+      "src": "/health",
+      "dest": "/preview/server.js"
+    },
+    {
+      "src": "/status",
+      "dest": "/preview/server.js"
+    },
+    {
+      "src": "/info",
+      "dest": "/preview/server.js"
+    },
+    {
+      "src": "/download",
+      "dest": "/preview/server.js"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/preview/index.html"
+      "dest": "/preview/server.js"
     }
   ],
   "env": {
