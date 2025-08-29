@@ -1,12 +1,10 @@
-import { load } from 'cheerio';
-
-const facebookRegex = /^https?:\/\/(?:www\.|web\.|m\.)?facebook\.com\/(watch(\?v=|\/\?v=)[0-9]+(?!\/)|reel\/[0-9]+|[a-zA-Z0-9.\-_]+\/(videos|posts)\/[0-9]+|[0-9]+\/(videos|posts)\/[0-9]+|[a-zA-Z0-9]+\/(videos|posts)\/[0-9]+|share\/(v|r)\/[a-zA-Z0-9]+\/?)([^/?#&]+).*$|^https:\/\/fb\.watch\/[a-zA-Z0-9]+$/g;
-const instagramRegex = /^https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|reels|tv|stories|share)\/([^/?#&]+).*/g;
-const tiktokRegex = /^https?:\/\/(?:www\.|m\.|vm\.|vt\.)?tiktok\.com\/(?:@[^/]+\/(?:video|photo)\/\d+|v\/\d+|t\/[\w]+|[\w]+)\/?/g;
-const twitterRegex = /^https:\/\/(?:x|twitter)\.com(?:\/(?:i\/web|[^/]+)\/status\/(\d+)(?:.*)?)?$/g;
+const facebookRegex = /^https?:\/\/(?:www\.|web\.|m\.)?facebook\.com\/(watch(\?v=|\/\?v=)[0-9]+(?!\/)|reel\/[0-9]+|[a-zA-Z0-9.\-_]+\/(videos|posts)\/[0-9]+|[0-9]+\/(videos|posts)\/[0-9]+|[a-zA-Z0-9]+\/(videos|posts)\/[0-9]+|share\/(v|r)\/[a-zA-Z0-9]+\/?)([^/?#&]+).*$|^https:\/\/fb\.watch\/[a-zA-Z0-9]+$/;
+const instagramRegex = /^https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|reels|tv|stories|share)\/([^/?#&]+).*/;
+const tiktokRegex = /^https?:\/\/(?:www\.|m\.|vm\.|vt\.)?tiktok\.com\/(?:@[^/]+\/(?:video|photo)\/\d+|v\/\d+|t\/[\w]+|[\w]+)\/?/;
+const twitterRegex = /^https:\/\/(?:x|twitter)\.com(?:\/(?:i\/web|[^/]+)\/status\/(\d+)(?:.*)?)?$/;
 const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
 const normalizeURL = (url) => {
-  if (url.match(twitterRegex)) return url;
+  if (twitterRegex.test(url)) return url;
   return /^(https?:\/\/)(?!www\.)[a-z0-9]+/i.test(url) ? url.replace(/^(https?:\/\/)([^./]+\.[^./]+)(\/.*)?$/, "$1www.$2$3") : url;
 };
 const fixThumbnail = (url) => {
@@ -72,6 +70,14 @@ function decryptSnaptik(data) {
   return getDecodedSnaptik(decodeSnapApp(getEncodedSnapApp(data)));
 }
 
+let cheerioLoad = null;
+async function getCheerioLoad() {
+  if (!cheerioLoad) {
+    const mod = await import('cheerio');
+    cheerioLoad = mod.load;
+  }
+  return cheerioLoad;
+}
 const snapsave = async (url) => {
   try {
     const regexList = [facebookRegex, instagramRegex, twitterRegex, tiktokRegex];
@@ -91,7 +97,8 @@ const snapsave = async (url) => {
         }
       });
       const homeHtml = await response2.text();
-      const $2 = load(homeHtml);
+      const load2 = await getCheerioLoad();
+      const $2 = load2(homeHtml);
       const token = $2("input[name='token']").val();
       if (token) {
         formData.append("token", token);
@@ -110,7 +117,7 @@ const snapsave = async (url) => {
       });
       const data2 = await response22.text();
       const decode2 = decryptSnaptik(data2);
-      const $3 = load(decode2);
+      const $3 = load2(decode2);
       const downloadLinks = [];
       $3("a").each((_, el) => {
         const href = $3(el).attr("href");
@@ -162,7 +169,8 @@ const snapsave = async (url) => {
         }
       });
       const homeHtml = await response2.text();
-      const $2 = load(homeHtml);
+      const load2 = await getCheerioLoad();
+      const $2 = load2(homeHtml);
       const token = $2("input[name='token']").val();
       if (token) {
         formData.append("token", token);
@@ -181,7 +189,7 @@ const snapsave = async (url) => {
       });
       const data2 = await response22.json();
       const html2 = data2?.data;
-      const $22 = load(html2);
+      const $22 = load2(html2);
       const twitterLinks = [];
       $22("a").each((_, el) => {
         const href = $22(el).attr("href");
@@ -228,6 +236,7 @@ const snapsave = async (url) => {
     });
     const html = await response.text();
     const decode = decryptSnapSave(html);
+    const load = await getCheerioLoad();
     const $ = load(decode);
     const data = {};
     const media = [];

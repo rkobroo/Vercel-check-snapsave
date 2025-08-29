@@ -1,4 +1,11 @@
-import { load } from "cheerio";
+let cheerioLoad: ((html: string) => ReturnType<typeof import("cheerio")["load"]>) | null = null;
+async function getCheerioLoad () {
+  if (!cheerioLoad) {
+    const mod = await import("cheerio");
+    cheerioLoad = mod.load;
+  }
+  return cheerioLoad;
+}
 import { facebookRegex, fixThumbnail, instagramRegex, normalizeURL, tiktokRegex, twitterRegex, userAgent } from "./utils";
 import type { SnapSaveDownloaderData, SnapSaveDownloaderMedia, SnapSaveDownloaderResponse } from "./types";
 import { decryptSnapSave, decryptSnaptik } from "./decrypter";
@@ -24,6 +31,7 @@ export const snapsave = async (url: string): Promise<SnapSaveDownloaderResponse>
         }
       });
       const homeHtml = await response.text();
+      const load = await getCheerioLoad();
       const $ = load(homeHtml);
       const token = $("input[name='token']").val() as string;
       
@@ -127,6 +135,7 @@ export const snapsave = async (url: string): Promise<SnapSaveDownloaderResponse>
         }
       });
       const homeHtml = await response.text();
+      const load = await getCheerioLoad();
       const $ = load(homeHtml);
       const token = $("input[name='token']").val() as string;
       
@@ -219,6 +228,7 @@ export const snapsave = async (url: string): Promise<SnapSaveDownloaderResponse>
 
     const html = await response.text();
     const decode = decryptSnapSave(html);
+    const load = await getCheerioLoad();
     const $ = load(decode);
     const data: SnapSaveDownloaderData = {};
     const media: SnapSaveDownloaderMedia[] = [];
