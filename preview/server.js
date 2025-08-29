@@ -115,12 +115,30 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Main route to serve the HTML page (used for local/dev only)
+// Main route to serve the HTML page
 app.get('/', (req, res) => {
     res.sendFile(new URL('./index.html', import.meta.url).pathname);
 });
 
-// Vercel serverless entrypoint
-export default (req, res) => {
-    return app(req, res);
-};
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Preview website running at http://0.0.0.0:${PORT}`);
+    console.log('You can now test your SnapSave API through the web interface!');
+    console.log('Press Ctrl+C to stop the server');
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+    console.log('\n🛑 Received SIGINT. Gracefully shutting down...');
+    server.close(() => {
+        console.log('✅ Server closed');
+        process.exit(0);
+    });
+});
+
+process.on('SIGTERM', () => {
+    console.log('\n🛑 Received SIGTERM. Gracefully shutting down...');
+    server.close(() => {
+        console.log('✅ Server closed');
+        process.exit(0);
+    });
+});
