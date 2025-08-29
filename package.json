@@ -28,6 +28,7 @@
   ],
   "author": "ahmedrangel",
   "license": "MIT",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -55,11 +56,11 @@
     }
   },
   "dependencies": {
-    "cheerio": "^1.0.0",
-    "express": "^4.18.2",
-    "unbuild": "^3.5.0"
+    "cheerio": "^1.0.0"
   },
   "devDependencies": {
+    "express": "^4.18.2",
+    "unbuild": "^3.5.0",
     "@stylistic/eslint-plugin": "^4.4.0",
     "@types/node": "^22.15.21",
     "@typescript-eslint/parser": "^8.32.1",
