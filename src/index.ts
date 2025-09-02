@@ -81,8 +81,21 @@ export const snapsave = async (url: string): Promise<SnapSaveDownloaderResponse>
       
       // Sort by quality (highest first)
       downloadLinks.sort((a, b) => b.quality - a.quality);
-      
-      // Get the best quality link
+
+      // Build media list including all available items (video and photos)
+      const mediaItems: SnapSaveDownloaderMedia[] = [];
+      const seen = new Set<string>();
+      for (const link of downloadLinks) {
+        if (!link?.url || seen.has(link.url)) continue;
+        seen.add(link.url);
+        mediaItems.push({
+          url: link.url,
+          type: link.type === "image" ? "image" : "video",
+          resolution: link.quality ? `${link.quality}p` : undefined
+        });
+      }
+
+      // Fallback for bestLink if needed
       const bestLink = downloadLinks[0];
       let _url = bestLink?.url;
       const type = bestLink?.type || "video";
@@ -103,11 +116,18 @@ export const snapsave = async (url: string): Promise<SnapSaveDownloaderResponse>
         description = description.replace(/^(TikTok|Video|Download|Share)[\s:]*/, '').trim();
       }
       
-      // Try multiple selectors for preview
+      // Try multiple selectors for preview; also use first image media if present
       let preview = $3("#thumbnail").attr("src") ||
                    $3("img[src*='tiktok']").first().attr("src") ||
                    $3(".video-thumb img").first().attr("src") ||
                    $3("img").first().attr("src");
+      const firstImageMedia = mediaItems.find(m => m.type === "image" && m.url);
+      if (!preview && firstImageMedia?.url) {
+        preview = firstImageMedia.url as string;
+      }
+      if (preview && preview.startsWith("//")) {
+        preview = "https:" + preview;
+      }
       
       if (!_url) {
         // Fallback: try to extract any download link
@@ -125,7 +145,9 @@ export const snapsave = async (url: string): Promise<SnapSaveDownloaderResponse>
         description = "TikTok Video";
       }
       
-      return { success: true, data: { description, preview, media: [{ url: _url, type }] } };
+      // Prefer full media list if available; otherwise fallback to best link
+      const media = mediaItems.length ? mediaItems : [{ url: _url, type }];
+      return { success: true, data: { description, preview, media } };
     }
     if (isTwitter) {
       const response = await fetch("https://twitterdownloader.snapsave.app/", {

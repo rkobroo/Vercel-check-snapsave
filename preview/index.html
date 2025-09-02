@@ -492,7 +492,17 @@
                 }
 
                 // Media Files Section
+                const photoCount = media.filter(m => (m.type || 'video') === 'image').length;
                 html += '<div class="media-section"><h3>📁 Available Downloads</h3>';
+                if (photoCount > 1) {
+                    html += `
+                        <div style="margin: 10px 0 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="download-btn" onclick="downloadAllPhotos('${(description || 'media').replace(/'/g, "\\'")}')">
+                                ⬇️ Download all ${photoCount} photos (ZIP)
+                            </button>
+                        </div>
+                    `;
+                }
 
                 media.forEach((item, index) => {
                     const mediaType = item.type || 'unknown';
@@ -541,12 +551,13 @@
 
                 const downloadUrl = window.URL.createObjectURL(blob);
 
-                // Determine platform name (simplified for filename generation)
+                // Determine platform name (simplified for filename generation) from media URL
                 let platformName = 'unknown';
-                if (window.location.href.includes('instagram.com')) platformName = 'instagram';
-                else if (window.location.href.includes('tiktok.com')) platformName = 'tiktok';
-                else if (window.location.href.includes('facebook.com')) platformName = 'facebook';
-                else if (window.location.href.includes('x.com') || window.location.href.includes('twitter.com')) platformName = 'twitter';
+                const lower = (url || '').toLowerCase();
+                if (lower.includes('instagram') || lower.includes('cdninstagram')) platformName = 'instagram';
+                else if (lower.includes('tiktok') || lower.includes('snaptik') || lower.includes('tikmate')) platformName = 'tiktok';
+                else if (lower.includes('facebook') || lower.includes('fbcdn')) platformName = 'facebook';
+                else if (lower.includes('twitter') || lower.includes('x.com') || lower.includes('twimg')) platformName = 'twitter';
 
                 // Clean and prepare filename
                 let filename = 'media';
@@ -568,7 +579,9 @@
 
                 const link = document.createElement('a');
                 link.href = downloadUrl;
-                link.download = `${filename}.${type === 'video' ? 'mp4' : 'jpg'}`; // Simplified extension
+                // Add uniqueness using index and timestamp to avoid duplicate names
+                const suffix = typeof index === 'number' ? `_${index + 1}` : '';
+                link.download = `${filename}${suffix}_${Date.now()}.${type === 'video' ? 'mp4' : 'jpg'}`; // Simplified extension
                 link.style.display = 'none';
                 document.body.appendChild(link);
                 link.click();
@@ -578,6 +591,87 @@
             } catch (error) {
                 console.error('Download failed:', error);
                 alert('Download failed. The media URL might not support direct download or the server returned an error.');
+            }
+        }
+
+        // Download all photos as a single ZIP to avoid repeated prompts
+        window.downloadAllPhotos = async function(title) {
+            try {
+                // Find last API response rendered into DOM
+                const dataText = document.getElementById('jsonOutput').textContent;
+                // We constructed DOM from object; better to re-query buttons to collect URLs/types
+                const mediaItems = Array.from(document.querySelectorAll('.media-item'));
+                const photoButtons = mediaItems
+                    .map(mi => mi.querySelector('button.download-btn'))
+                    .filter(btn => btn && btn.textContent && !btn.textContent.toLowerCase().includes('video'));
+
+                // Fallback: parse from a stored reference if we had one; here, we reconstruct from the button's onclick string
+                const photoEntries = [];
+                document.querySelectorAll('button.download-btn').forEach(btn => {
+                    const onClick = btn.getAttribute('onclick') || '';
+                    if (onClick.includes("'image'")) {
+                        const match = onClick.match(/downloadMediaFunction\('([^']+)'/);
+                        if (match) photoEntries.push({ url: match[1] });
+                    }
+                });
+
+                if (!photoEntries.length) {
+                    alert('No photos found to download.');
+                    return;
+                }
+
+                // Lazy load JSZip from CDN
+                if (!window.JSZip) {
+                    await new Promise((resolve, reject) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+                        s.onload = resolve;
+                        s.onerror = reject;
+                        document.body.appendChild(s);
+                    });
+                }
+
+                const zip = new window.JSZip();
+
+                // Prepare base filename from title
+                const platformName = 'tiktok';
+                let base = 'media';
+                if (title && title.trim().length > 0) {
+                    base = title
+                        .replace(/[^a-zA-Z0-9\s-_]/g, '')
+                        .replace(/\s+/g, '_')
+                        .replace(/_+/g, '_')
+                        .substring(0, 80)
+                        .replace(/^_+|_+$/g, '');
+                    if (!base || base.length < 2) base = `${platformName}_album`;
+                } else {
+                    base = `${platformName}_album`;
+                }
+
+                // Fetch all photos and add to zip
+                let idx = 1;
+                for (const entry of photoEntries) {
+                    const res = await fetch(entry.url);
+                    const blob = await res.blob();
+                    const arrayBuffer = await blob.arrayBuffer();
+                    const fileExt = 'jpg';
+                    const uniqueName = `${base}_${String(idx).padStart(2,'0')}.jpg`;
+                    zip.file(uniqueName, arrayBuffer);
+                    idx++;
+                }
+
+                const zipContent = await zip.generateAsync({ type: 'blob' });
+                const zipUrl = URL.createObjectURL(zipContent);
+                const a = document.createElement('a');
+                a.href = zipUrl;
+                a.download = `${base}_${Date.now()}.zip`;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (e) {
+                console.error('Bulk download failed', e);
+                alert('Bulk download failed.');
             }
         }
     </script>
